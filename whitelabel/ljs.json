@@ -1,0 +1,11 @@
+{
+  "FLUXER_APP_ID": "de.dielinke.meine.ljs",
+  "FLUXER_APP_NAME": "Meine LJS Chat",
+  "FLUXER_DEFAULT_INSTANCE": "fluxer.aprl2.bak-it-stage.de",
+  "FLUXER_DEFAULT_API_BASE_URL": "https://fluxer.aprl2.bak-it-stage.de/api/v1",
+  "FLUXER_DEFAULT_GATEWAY_URL": "wss://fluxer.aprl2.bak-it-stage.de/gateway",
+  "FLUXER_LOCK_INSTANCE": "true",
+  "APP_ENVIRONMENT": "stable",
+  "PUSH_PROVIDER": "unifiedpush",
+  "OBSERVABILITY_REPORTING": "false"
+}
