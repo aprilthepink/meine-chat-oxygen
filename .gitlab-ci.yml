@@ -1,0 +1,56 @@
+stages:
+  - build
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "trunk"
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_DEPTH: 1
+  PUB_CACHE: $CI_PROJECT_DIR/.cache/pub
+  GRADLE_USER_HOME: $CI_PROJECT_DIR/.cache/gradle
+  CARGO_HOME: $CI_PROJECT_DIR/.cache/cargo
+  RUSTUP_HOME: $CI_PROJECT_DIR/.cache/rustup
+
+.android:
+  stage: build
+  image: ghcr.io/cirruslabs/flutter:3.50.0
+  cache:
+    key: oxygen-android
+    paths:
+      - .cache/
+  before_script:
+    - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+    - source "$CARGO_HOME/env"
+    - rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+    - (cd fluxer && rustup toolchain install && rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android)
+    - flutter config --enable-native-assets
+    - |
+      if [ -n "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+        echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$CI_PROJECT_DIR/upload-keystore.jks"
+        printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=%s\n' \
+          "$ANDROID_KEYSTORE_PASSWORD" "$ANDROID_KEY_PASSWORD" "$ANDROID_KEY_ALIAS" \
+          "$CI_PROJECT_DIR/upload-keystore.jks" > android/key.properties
+      else
+        echo "ANDROID_KEYSTORE_BASE64 not set: APK is signed with the debug key"
+      fi
+  script:
+    - BUILD_NUMBER="$CI_PIPELINE_IID" whitelabel/build.sh "$CTX" apk
+    - mv build/app/outputs/flutter-apk/app-stableunifiedpush-release.apk "meine-$CTX-$CI_PIPELINE_IID.apk"
+  artifacts:
+    name: meine-$CTX-android-$CI_PIPELINE_IID
+    paths:
+      - meine-$CTX-*.apk
+    expire_in: 30 days
+
+android:pdl:
+  extends: .android
+  variables:
+    CTX: pdl
+
+android:ljs:
+  extends: .android
+  variables:
+    CTX: ljs
