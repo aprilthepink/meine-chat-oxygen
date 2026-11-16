@@ -1,8 +1,18 @@
 abstract final class InstanceConstants {
   static const int apiCodeVersion = 1;
-  static const String defaultApiBaseUrl = 'https://fluxer.com/api/v1';
-  static const String defaultGatewayUrl = 'wss://gateway.fluxer.com';
-  static const String defaultInstanceInputUrl = 'fluxer.com';
+  static const String defaultApiBaseUrl = String.fromEnvironment(
+    'FLUXER_DEFAULT_API_BASE_URL',
+    defaultValue: 'https://fluxer.com/api/v1',
+  );
+  static const String defaultGatewayUrl = String.fromEnvironment(
+    'FLUXER_DEFAULT_GATEWAY_URL',
+    defaultValue: 'wss://gateway.fluxer.com',
+  );
+  static const String defaultInstanceInputUrl = String.fromEnvironment(
+    'FLUXER_DEFAULT_INSTANCE',
+    defaultValue: 'fluxer.com',
+  );
+  static const bool lockInstance = bool.fromEnvironment('FLUXER_LOCK_INSTANCE');
   static const String canaryApiBaseUrl = 'https://canary.fluxer.com/api/v1';
   static const String canaryInstanceInputUrl = 'canary.fluxer.com';
   static const String defaultTermsUrl = 'https://fluxer.com/terms';

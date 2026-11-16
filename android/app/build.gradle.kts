@@ -122,6 +122,23 @@ abstract class CopyBundledRootCertificatesTask : DefaultTask() {
 
 val bundledRootCertificates = file("../../assets/certificates/root_certificates.pem")
 
+val dartDefines: Map<String, String> =
+    (project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.mapNotNull { encoded ->
+            String(java.util.Base64.getDecoder().decode(encoded))
+                .split("=", limit = 2)
+                .takeIf { it.size == 2 }
+                ?.let { it[0] to it[1] }
+        }
+        ?.toMap()
+        ?: emptyMap()
+val appIdOverride = dartDefines["FLUXER_APP_ID"]?.trim()?.takeIf { it.isNotEmpty() }
+val appNameOverride = dartDefines["FLUXER_APP_NAME"]?.trim()?.takeIf { it.isNotEmpty() }
+
+fun appLabel(default: String, suffix: String = ""): String =
+    appNameOverride?.let { "$it$suffix" } ?: default
+
 android {
     namespace = "com.fluxer"
     compileSdk = 37
@@ -144,13 +161,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.fluxer"
+        applicationId = appIdOverride ?: "com.fluxer"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
-        manifestPlaceholders["appLabel"] = "Fluxer"
+        manifestPlaceholders["appLabel"] = appLabel("Fluxer")
         manifestPlaceholders["buildEnvironment"] = "stable"
         manifestPlaceholders["pushProvider"] = "fcm"
         manifestPlaceholders["appIconAliasPrefix"] = "com.fluxer.MainActivity"
@@ -163,7 +180,7 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".canary"
             versionNameSuffix = "-canary"
-            manifestPlaceholders["appLabel"] = "Fluxer Canary"
+            manifestPlaceholders["appLabel"] = appLabel("Fluxer Canary", " Canary")
             manifestPlaceholders["buildEnvironment"] = "canary"
             manifestPlaceholders["appIconAliasPrefix"] = "com.fluxer.canary.MainActivity"
             manifestPlaceholders["measureApiKey"] =
@@ -175,7 +192,7 @@ android {
         }
         create("stable") {
             dimension = "environment"
-            manifestPlaceholders["appLabel"] = "Fluxer"
+            manifestPlaceholders["appLabel"] = appLabel("Fluxer")
             manifestPlaceholders["buildEnvironment"] = "stable"
             manifestPlaceholders["measureApiKey"] =
                 readMeasureAndroidApiKey(
@@ -186,7 +203,7 @@ android {
         }
         create("beta") {
             dimension = "environment"
-            manifestPlaceholders["appLabel"] = "Fluxer Beta"
+            manifestPlaceholders["appLabel"] = appLabel("Fluxer Beta", " Beta")
             manifestPlaceholders["buildEnvironment"] = "beta"
             manifestPlaceholders["measureApiKey"] =
                 readMeasureAndroidApiKey(

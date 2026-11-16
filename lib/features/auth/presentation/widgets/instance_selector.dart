@@ -257,6 +257,9 @@ class InstanceSelectorLoginEntry extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (InstanceConstants.lockInstance) {
+      return const SizedBox.shrink();
+    }
     final FluxerLocalizations l10n = FluxerLocalizations.of(context);
     final AsyncValue<InstanceSelectorState> selectorAsync = ref.watch(
       instanceSelectorProvider,
