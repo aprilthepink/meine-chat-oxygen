@@ -23,7 +23,7 @@ The in-app product name and branding come from the instance (`branding.product_n
 ## Branches
 
 - `upstream`: raw upstream (`fluxer/canary`)
-- `contributions`: generic changes meant to be upstreamed (DCO sign-off, `git commit -s`)
+- `contributions`: generic changes meant to be upstreamed (sign off with `git rebase --signoff upstream` before submitting)
 - `trunk`: whitelabel, merges `contributions`
 
 ## TODO
