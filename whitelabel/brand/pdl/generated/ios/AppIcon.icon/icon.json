@@ -1,0 +1,30 @@
+{
+  "fill": {
+    "solid": "display-p3:0.91749,0.20029,0.13856,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "fill": "automatic",
+          "image-name": "Mark.png",
+          "name": "Mark"
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0.5
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}

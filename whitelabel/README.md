@@ -7,18 +7,38 @@ Whitelabel builds of Fluxer Mobile (Oxygen) for Die Linke (`pdl`) and Linksjugen
 ./whitelabel/build.sh ljs appbundle
 ```
 
-`<ctx>.json` is passed as `--dart-define-from-file`:
+`build.sh` runs `apply.sh <ctx>` first, which patches the working tree (icons, splash, colours, iOS bundle ids,
+app group, display names). Use a clean checkout per context.
 
-| Key | Purpose |
-|---|---|
-| `FLUXER_APP_ID` | Android application id (`de.dielinke.meine.<ctx>`) |
-| `FLUXER_APP_NAME` | Name on the home screen |
-| `FLUXER_DEFAULT_INSTANCE`, `..._API_BASE_URL`, `..._GATEWAY_URL` | Instance the app talks to |
-| `FLUXER_LOCK_INSTANCE` | Hide the instance selector |
-| `PUSH_PROVIDER` | `unifiedpush` (no Firebase) |
-| `OBSERVABILITY_REPORTING` | Off: no crash/telemetry reporting to Fluxer |
+## Files
+
+- `<ctx>.json`: passed as `--dart-define-from-file`
+
+  | Key | Purpose |
+  |---|---|
+  | `FLUXER_APP_ID` | Android application id / iOS bundle id prefix (`de.dielinke.meine.<ctx>`) |
+  | `FLUXER_APP_NAME` | Name on the home screen |
+  | `FLUXER_DEFAULT_INSTANCE`, `..._API_BASE_URL`, `..._GATEWAY_URL` | Instance the app talks to |
+  | `FLUXER_LOCK_INSTANCE` | Hide the instance selector |
+  | `PUSH_PROVIDER` | `unifiedpush` (no Firebase) |
+  | `OBSERVABILITY_REPORTING` | Off: no crash/telemetry reporting to Fluxer |
+
+- `brand/<ctx>/mark.svg`, `brand.json`: logo (white) and brand colour
+  - pdl: https://meine.die-linke.de/static/assets/icons/logo.svg
+  - ljs: https://login.linksjugend-solid.de/static/assets/icons/logo.svg
+- `brand/<ctx>/generated/`: icons and splash, regenerate after changing the logo or colour:
+  `nix-shell -p librsvg imagemagick python3 --run 'python3 whitelabel/tools/generate_assets.py'`
 
 The in-app product name and branding come from the instance (`branding.product_name`).
+
+## CI
+
+`.gitlab-ci.yml` builds `meine-<ctx>-<pipeline>.apk` on `trunk`. Optional CI variables for release signing:
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
+(otherwise the debug key is used; the release key must never change once published).
+
+iOS needs a macOS runner and an Apple team: `APPLE_TEAM_ID=… whitelabel/apply.sh <ctx>`, then
+`flutter build ipa --flavor stable --dart-define-from-file=tool/dart_defines/stable.json --dart-define-from-file=whitelabel/<ctx>.json`.
 
 ## Branches
 
@@ -28,6 +48,6 @@ The in-app product name and branding come from the instance (`branding.product_n
 
 ## TODO
 
-- Icons and splash per context
-- iOS bundle id / display name (`FLUXER_APP_ID` is Android only so far)
+- Alternative app icons (Fluxer icon picker) still show Fluxer icons
+- Push (UnifiedPush distributor / APNs for iOS)
 - Instance: stage (`fluxer.aprl2.bak-it-stage.de`) until production exists
