@@ -23,6 +23,7 @@ app_name="$(json FLUXER_APP_NAME "$config")"
 instance="$(json FLUXER_DEFAULT_INSTANCE "$config")"
 color="$(json color "$brand/brand.json")"
 font="$(json font "$brand/brand.json")"
+heading_font="$(json heading_font "$brand/brand.json")"
 for var in app_id app_name instance color; do
   [[ -n "${!var}" ]] || { echo "missing $var for $ctx" >&2; exit 1; }
 done
@@ -63,6 +64,17 @@ if [[ -n "$font" ]]; then
   for style in Regular Medium SemiBold Italic; do
     replace pubspec.yaml "assets/fonts/IBMPlexSans-$style\.ttf" "$(ls whitelabel/fonts/"$font"/*-"$style".ttf)"
   done
+fi
+
+if [[ -n "$heading_font" ]]; then
+  family="  fonts:\n    - family: WhitelabelHeading\n      fonts:"
+  for weight in 400:Regular 500:Medium 600:SemiBold 700:Bold 800:ExtraBold; do
+    family+="\n        - asset: $(ls whitelabel/fonts/"$heading_font"/*-"${weight#*:}".ttf)\n          weight: ${weight%%:*}"
+  done
+  replace pubspec.yaml '^  fonts:$' "$family"
+  text_theme=lib/core/theme/fluxer_text_theme.dart
+  perl -0pi -e "s#(heading: TextStyle\(\n\s+)fontFamily: FluxerFonts\.sans,#\$1fontFamily: 'WhitelabelHeading',\n        letterSpacing: -0.4,#" "$text_theme"
+  grep -q "fontFamily: 'WhitelabelHeading'" "$text_theme" || { echo "apply.sh: heading style not found in $text_theme" >&2; exit 1; }
 fi
 
 if grep -qE 'PRODUCT_BUNDLE_IDENTIFIER = com\.fluxer|group\.com\.fluxer|(applinks|webcredentials):(canary\.|web\.)?fluxer\.(com|app|gg)' "$pbx" ios/Runner/Runner.entitlements; then

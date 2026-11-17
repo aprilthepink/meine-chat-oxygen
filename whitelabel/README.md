@@ -31,6 +31,11 @@ app group, display names). Use a clean checkout per context.
 - `fonts/<font>/`: UI font replacing IBM Plex Sans if `brand.json` sets `font`, SIL OFL 1.1
   - pdl: Inter (rsms/inter v4.1), body font of lissi.die-linke.de
   - ljs: keeps IBM Plex Sans
+  - `heading_font`: Work Sans (static instances, Latin subset) for the `heading` text style, -0.02em letter spacing
+    (lissi.die-linke.de headline font; LJS uses Gilroy, which is proprietary)
+
+Colours: the app takes the instance's `theme_color` as brand colour (`contributions`, like the web app does on
+self-hosted instances), unless the user set an own accent.
 
 The in-app product name and branding come from the instance (`branding.product_name`).
 
