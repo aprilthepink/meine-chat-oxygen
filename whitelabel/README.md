@@ -33,7 +33,9 @@ The in-app product name and branding come from the instance (`branding.product_n
 
 ## CI
 
-`.gitlab-ci.yml` builds `meine-<ctx>-<pipeline>.apk` on `trunk`. Optional CI variables for release signing:
+`.gitlab-ci.yml` builds one APK per ABI (arm64-v8a, armeabi-v7a) on `trunk` and uploads them to the
+package registry (`meine-<ctx>-android/<pipeline>/`), as they are too large for job artifacts.
+No CI cache: the runners' cache URL is misconfigured (`https://https://...`). Optional CI variables for release signing:
 `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
 (otherwise the debug key is used; the release key must never change once published).
 

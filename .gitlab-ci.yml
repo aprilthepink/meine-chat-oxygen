@@ -19,10 +19,6 @@ variables:
 .android:
   stage: build
   image: ghcr.io/cirruslabs/flutter:stable
-  cache:
-    key: oxygen-android
-    paths:
-      - .cache/
   before_script:
     - |
       flutter_dir="$CI_PROJECT_DIR/.cache/flutter-$FLUTTER_VERSION"
@@ -49,13 +45,17 @@ variables:
         echo "ANDROID_KEYSTORE_BASE64 not set: APK is signed with the debug key"
       fi
   script:
-    - BUILD_NUMBER="$CI_PIPELINE_IID" whitelabel/build.sh "$CTX" apk
-    - mv build/app/outputs/flutter-apk/app-stableunifiedpush-release.apk "meine-$CTX-$CI_PIPELINE_IID.apk"
-  artifacts:
-    name: meine-$CTX-android-$CI_PIPELINE_IID
-    paths:
-      - meine-$CTX-*.apk
-    expire_in: 30 days
+    - >-
+      BUILD_NUMBER="$CI_PIPELINE_IID"
+      FLUTTER_BUILD_ARGS="--split-per-abi --target-platform android-arm,android-arm64"
+      whitelabel/build.sh "$CTX" apk
+    - |
+      for abi in arm64-v8a armeabi-v7a; do
+        apk="build/app/outputs/flutter-apk/app-$abi-stableunifiedpush-release.apk"
+        ls -lh "$apk"
+        curl --fail-with-body --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$apk" \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/meine-$CTX-android/$CI_PIPELINE_IID/meine-$CTX-$abi.apk"
+      done
 
 android:pdl:
   extends: .android

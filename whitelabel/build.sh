@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: whitelabel/build.sh <pdl|ljs> [apk|appbundle]  (BUILD_NUMBER optional)
+# Usage: whitelabel/build.sh <pdl|ljs> [apk|appbundle]  (BUILD_NUMBER, FLUTTER_BUILD_ARGS optional)
 set -euo pipefail
 
 ctx="${1:?usage: $0 <pdl|ljs> [apk|appbundle]}"
@@ -18,4 +18,5 @@ flutter build "$target" --release \
   ${BUILD_NUMBER:+--build-number "$BUILD_NUMBER"} \
   --dart-define-from-file=tool/dart_defines/stable.json \
   --dart-define-from-file="whitelabel/$ctx.json" \
-  --dart-define=BUILD_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  --dart-define=BUILD_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  ${FLUTTER_BUILD_ARGS:-}
