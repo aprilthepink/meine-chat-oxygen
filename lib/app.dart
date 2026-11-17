@@ -15,6 +15,7 @@ import 'package:fluxer_app/core/router/fluxer_router.dart';
 import 'package:fluxer_app/core/theme/fluxer_color_theme.dart';
 import 'package:fluxer_app/core/theme/fluxer_theme.dart';
 import 'package:fluxer_app/core/theme/fluxer_theme_mode.dart';
+import 'package:fluxer_app/core/theme/instance_theme_color.dart';
 import 'package:fluxer_app/core/theme/providers/theme_preference_provider.dart';
 import 'package:fluxer_app/core/zoom/fluxer_app_zoom.dart';
 import 'package:fluxer_app/features/accessibility/domain/resolve_reduced_motion.dart';
@@ -87,6 +88,28 @@ class _FluxerAppState extends ConsumerState<FluxerApp> {
         ),
       ),
     );
+    final String? instanceThemeColor = ref.watch(
+      instanceRuntimeConfigProvider.select(
+        (config) => config.selfHosted ? config.themeColorHex : null,
+      ),
+    );
+    final ({double saturationFactor, bool userAccent}) accentPref = ref.watch(
+      themePreferenceProvider.select(
+        (ThemePreferenceState state) => (
+          saturationFactor: state.saturationFactor,
+          userAccent:
+              state.useSystemDynamicColors ||
+              (state.customThemeCss?.contains('--brand-primary') ?? false),
+        ),
+      ),
+    );
+    FluxerColorTheme branded(FluxerColorTheme colors) => accentPref.userAccent
+        ? colors
+        : applyInstanceThemeColor(
+            colors,
+            themeColor: instanceThemeColor,
+            saturationFactor: accentPref.saturationFactor,
+          );
     final Locale appLocale = ref.watch(effectiveAppLocaleProvider);
     final ({bool sync, bool override}) reducedMotionPrefs = ref.watch(
       appearancePreferencesProvider.select(
@@ -104,14 +127,14 @@ class _FluxerAppState extends ConsumerState<FluxerApp> {
       case FluxerThemeMode.system:
         themeMode = ThemeMode.system;
         theme = cachedFluxerTheme(
-          colorTheme: themePref.light,
+          colorTheme: branded(themePref.light),
           brightness: Brightness.light,
         );
-        darkThemeData = cachedFluxerTheme(colorTheme: themePref.dark);
+        darkThemeData = cachedFluxerTheme(colorTheme: branded(themePref.dark));
       case FluxerThemeMode.light:
         themeMode = ThemeMode.light;
         theme = cachedFluxerTheme(
-          colorTheme: themePref.active,
+          colorTheme: branded(themePref.active),
           brightness: Brightness.light,
         );
         darkThemeData = null;
@@ -119,7 +142,7 @@ class _FluxerAppState extends ConsumerState<FluxerApp> {
       case FluxerThemeMode.darkLegacy:
       case FluxerThemeMode.coal:
         themeMode = ThemeMode.dark;
-        theme = cachedFluxerTheme(colorTheme: themePref.active);
+        theme = cachedFluxerTheme(colorTheme: branded(themePref.active));
         darkThemeData = theme;
     }
 
