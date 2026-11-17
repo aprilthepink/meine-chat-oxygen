@@ -28,9 +28,9 @@ app group, display names). Use a clean checkout per context.
   - ljs: https://login.linksjugend-solid.de/static/assets/icons/logo.svg
 - `brand/<ctx>/generated/`: icons and splash, regenerate after changing the logo or colour:
   `nix-shell -p librsvg imagemagick python3 --run 'python3 whitelabel/tools/generate_assets.py'`
-- `fonts/<font>/`: UI font replacing IBM Plex Sans (`brand.json` `font`), SIL OFL 1.1
+- `fonts/<font>/`: UI font replacing IBM Plex Sans if `brand.json` sets `font`, SIL OFL 1.1
   - pdl: Inter (rsms/inter v4.1), body font of lissi.die-linke.de
-  - ljs: Hind (google/fonts), Latin subset, no italic (Flutter slants it)
+  - ljs: keeps IBM Plex Sans
 
 The in-app product name and branding come from the instance (`branding.product_name`).
 

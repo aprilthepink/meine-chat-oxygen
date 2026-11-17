@@ -23,7 +23,7 @@ app_name="$(json FLUXER_APP_NAME "$config")"
 instance="$(json FLUXER_DEFAULT_INSTANCE "$config")"
 color="$(json color "$brand/brand.json")"
 font="$(json font "$brand/brand.json")"
-for var in app_id app_name instance color font; do
+for var in app_id app_name instance color; do
   [[ -n "${!var}" ]] || { echo "missing $var for $ctx" >&2; exit 1; }
 done
 
@@ -59,18 +59,10 @@ done
 replace ios/Runner/Runner.entitlements '\$\(AppIdentifierPrefix\)com\.fluxer' "\$(AppIdentifierPrefix)$app_id"
 perl -0pi -e "s#(<key>com.apple.developer.associated-domains</key>\s*<array>).*?(</array>)#\$1\n\t\t<string>applinks:$instance</string>\n\t\t<string>webcredentials:$instance</string>\n\t\$2#s" ios/Runner/Runner.entitlements
 
-fonts="whitelabel/fonts/$font"
-for style in Regular Medium SemiBold; do
-  replace pubspec.yaml "assets/fonts/IBMPlexSans-$style\.ttf" "$(ls "$fonts"/*-"$style".ttf)"
-done
-if compgen -G "$fonts/*-Italic.ttf" >/dev/null; then
-  replace pubspec.yaml 'assets/fonts/IBMPlexSans-Italic\.ttf' "$(ls "$fonts"/*-Italic.ttf)"
-else
-  perl -0pi -e 's#\n +- asset: assets/fonts/IBMPlexSans-Italic\.ttf\n +weight: 400\n +style: italic##' pubspec.yaml
-fi
-if grep -q 'IBMPlexSans-' pubspec.yaml; then
-  echo "apply.sh: IBM Plex Sans left in pubspec.yaml" >&2
-  exit 1
+if [[ -n "$font" ]]; then
+  for style in Regular Medium SemiBold Italic; do
+    replace pubspec.yaml "assets/fonts/IBMPlexSans-$style\.ttf" "$(ls whitelabel/fonts/"$font"/*-"$style".ttf)"
+  done
 fi
 
 if grep -qE 'PRODUCT_BUNDLE_IDENTIFIER = com\.fluxer|group\.com\.fluxer|(applinks|webcredentials):(canary\.|web\.)?fluxer\.(com|app|gg)' "$pbx" ios/Runner/Runner.entitlements; then
