@@ -1,8 +1,10 @@
 import 'package:fluxer_app/core/database/fluxer_database.dart';
 import 'package:fluxer_app/core/instance/instance_config_snapshot.dart';
+import 'package:fluxer_app/core/instance/instance_constants.dart';
 import 'package:fluxer_app/core/instance/instance_discovery_service.dart';
 import 'package:fluxer_app/core/instance/instance_endpoint_normalizer.dart';
 import 'package:fluxer_app/core/providers/database_provider.dart';
+import 'package:fluxer_app/core/talker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'active_instance_provider.g.dart';
@@ -27,7 +29,25 @@ class ActiveInstance extends _$ActiveInstance {
         displayDomain: _normalizer.extractDisplayDomain(configuredBaseUrl),
       );
     }
+    if (!_normalizer.isOfficialInstanceInput(
+      InstanceConstants.defaultInstanceInputUrl,
+    )) {
+      Future<void>.microtask(_discoverDefaultInstance);
+    }
     return InstanceConfigSnapshot.officialDefault();
+  }
+
+  Future<void> _discoverDefaultInstance() async {
+    if (state.wellKnown != null) {
+      return;
+    }
+    try {
+      await connectToEndpoint(InstanceConstants.defaultInstanceInputUrl);
+    } on Object catch (error) {
+      talker.warning(
+        '[ActiveInstance] Default instance discovery failed: $error',
+      );
+    }
   }
 
   String describeApiEndpoint() {
