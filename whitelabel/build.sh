@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Usage: whitelabel/build.sh <pdl|ljs> [apk|appbundle]  (BUILD_NUMBER, FLUTTER_BUILD_ARGS optional)
+# Usage: whitelabel/build.sh <pdl|ljs> [apk|appbundle|ios|ipa]  (BUILD_NUMBER, FLUTTER_BUILD_ARGS optional)
 set -euo pipefail
 
-ctx="${1:?usage: $0 <pdl|ljs> [apk|appbundle]}"
+ctx="${1:?usage: $0 <pdl|ljs> [apk|appbundle|ios|ipa]}"
 target="${2:-apk}"
+flavor=stableUnifiedpush
+[[ $target == ios || $target == ipa ]] && flavor=stable
 cd "$(dirname "$0")/.."
 
 whitelabel/apply.sh "$ctx"
@@ -14,7 +16,7 @@ flutter pub get
 dart run build_runner build
 
 flutter build "$target" --release \
-  --flavor stableUnifiedpush \
+  --flavor "$flavor" \
   ${BUILD_NUMBER:+--build-number "$BUILD_NUMBER"} \
   --dart-define-from-file=tool/dart_defines/stable.json \
   --dart-define-from-file="whitelabel/$ctx.json" \

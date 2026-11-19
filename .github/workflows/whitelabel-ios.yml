@@ -1,0 +1,71 @@
+name: whitelabel ios
+
+on:
+  push:
+    branches:
+      - trunk
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whitelabel-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: ios ${{ matrix.ctx }}
+    runs-on: macos-26
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        ctx:
+          - pdl
+          - ljs
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          submodules: recursive
+
+      - uses: axi92/flutter-action@72633a794ba0b23276fa4fc465a6cacb758a90c5
+        with:
+          channel: stable
+          flutter-version: 3.50.0
+
+      - name: Set up Rust and native asset build hooks
+        run: |
+          if ! command -v cargo >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+            . "$HOME/.cargo/env"
+          fi
+          rustup target add aarch64-apple-ios
+          (cd fluxer && rustup toolchain install && rustup target add aarch64-apple-ios)
+          flutter config --enable-native-assets
+          xcodebuild -version
+
+      - name: Build
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          FLUTTER_BUILD_ARGS: --no-codesign
+        run: whitelabel/build.sh ${{ matrix.ctx }} ios
+
+      - name: Package IPA
+        run: |
+          mkdir -p dist/Payload
+          cp -R build/ios/iphoneos/Runner.app dist/Payload/
+          (cd dist && zip -qry "meine-${{ matrix.ctx }}-ios-${{ github.run_number }}-unsigned.ipa" Payload)
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' -c 'Print :CFBundleDisplayName' -c 'Print :CFBundleVersion' dist/Payload/Runner.app/Info.plist
+          ls -lh dist/*.ipa
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: meine-${{ matrix.ctx }}-ios-${{ github.run_number }}
+          path: dist/*.ipa
+          compression-level: 0
+          retention-days: 30

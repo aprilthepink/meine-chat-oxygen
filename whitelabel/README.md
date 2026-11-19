@@ -47,8 +47,13 @@ No CI cache: the runners' cache URL is misconfigured (`https://https://...`). Op
 `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
 (otherwise the debug key is used; the release key must never change once published).
 
-iOS needs a macOS runner and an Apple team: `APPLE_TEAM_ID=… whitelabel/apply.sh <ctx>`, then
-`flutter build ipa --flavor stable --dart-define-from-file=tool/dart_defines/stable.json --dart-define-from-file=whitelabel/<ctx>.json`.
+iOS builds on GitHub Actions (free macOS runners for public repositories) in the public fork
+[aprilthepink/meine-chat-oxygen](https://github.com/aprilthepink/meine-chat-oxygen), workflow
+`.github/workflows/whitelabel-ios.yml`: `whitelabel/build.sh <ctx> ios` with `--no-codesign`, an unsigned IPA per
+context as workflow artifact. An iPhone only runs it re-signed (Sideloadly/AltStore with an own Apple ID, 7 days);
+TestFlight/App Store need an Apple Developer account: `APPLE_TEAM_ID=… whitelabel/build.sh <ctx> ipa` with the
+certificate and provisioning profiles (app, ShareExtension, NotificationService, BroadcastExtension, app group
+`group.<FLUXER_APP_ID>`) in the keychain.
 
 ## Branches
 
